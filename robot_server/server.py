@@ -25,6 +25,7 @@ from stt import StreamingSTT
 from robot_control import RobotControl
 from mic import LocalMic
 from ipc import start_ipc_server
+from agent import RobotAgent
 
 logging.basicConfig(
     level=logging.INFO,
@@ -39,16 +40,37 @@ _latest_frame = None
 _frame_lock   = threading.Lock()
 _loop         = None   # asyncio event loop
 
+# Gemini агент (None если ключ не задан)
+_agent = None
+
+
+def _get_latest_frame() -> bytes | None:
+    """Возвращает последний JPEG кадр с камеры."""
+    with _frame_lock:
+        if _latest_frame is None:
+            return None
+        _, buf = cv2.imencode(".jpg", _latest_frame,
+                              [cv2.IMWRITE_JPEG_QUALITY, 85])
+        return buf.tobytes()
+
 
 # ─── Callback'и ───────────────────────────────────────────────────────
 
 def on_text_recognized(text: str):
     """Вызывается когда STT распознал фразу."""
-    command = commands.parse(text)
-    if command and _loop:
+    if _agent and _loop:
+        # Gemini агент — автономное выполнение
+        frame = _get_latest_frame()
         asyncio.run_coroutine_threadsafe(
-            robot.execute(command), _loop
+            _agent.run(text, frame), _loop
         )
+    else:
+        # Fallback — простой keyword matching
+        command = commands.parse(text)
+        if command and _loop:
+            asyncio.run_coroutine_threadsafe(
+                robot.execute(command), _loop
+            )
 
 
 # ─── WebSocket обработчик ─────────────────────────────────────────────
@@ -153,6 +175,14 @@ async def main():
 
 
 if __name__ == "__main__":
+    # Gemini агент
+    if config.GEMINI_API_KEY:
+        _agent = RobotAgent(robot, _get_latest_frame, config.GEMINI_API_KEY)
+        log.info("Gemini Agent активен — автономное управление включено")
+    else:
+        log.warning("GEMINI_API_KEY не задан — используется keyword matching")
+        log.warning("Установи переменную окружения: set GEMINI_API_KEY=ваш_ключ")
+
     # STT инициализация
     stt = StreamingSTT(on_text_recognized)
     stt.start()

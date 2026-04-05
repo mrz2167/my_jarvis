@@ -30,6 +30,11 @@ ARM_EXTEND = {3: 1500, 4: 1250, 5: 1500}  # вытянуть вперёд
 # Jarvis IPC (UDP порт для приёма STT текста от C++ core)
 IPC_PORT = 9712
 
+# Gemini Agent
+# Получить ключ: https://aistudio.google.com/apikey
+import os
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+
 # Скорость движения шасси
 MOVE_SPEED    = 50
 ROTATE_SPEED  = 40
