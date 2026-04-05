@@ -1,0 +1,31 @@
+# C++ Build
+core/build/
+*.obj
+*.exe
+*.dll
+*.lib
+*.pdb
+
+# Большие модели (качаются автоматически)
+core/models/stt/vosk-model-ru-0.42/
+core/models/stt/vosk-model-small-ru-0.22/
+core/models/stt/ggml-*.bin
+core/models/vad/silero_vad.onnx
+core/models/wake_word/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+gripper_env/
+gripper_firmware/gripper_env/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+.claude/
+*.local.json

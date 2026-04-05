@@ -1,0 +1,3 @@
+#pragma once
+// Автогенерируется CMake — не редактировать вручную
+#define VOSK_MODEL_PATH "@VOSK_MODEL_PATH@"
