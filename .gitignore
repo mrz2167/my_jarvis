@@ -22,6 +22,10 @@ venv/
 gripper_env/
 gripper_firmware/gripper_env/
 
+# Секреты
+.env
+*.env
+
 # IDE / OS
 .vscode/
 .idea/

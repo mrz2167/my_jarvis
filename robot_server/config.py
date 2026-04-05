@@ -32,7 +32,13 @@ IPC_PORT = 9712
 
 # Gemini Agent
 # Получить ключ: https://aistudio.google.com/apikey
+# Хранить в robot_server/.env — в git не попадает
 import os
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 
 # Скорость движения шасси
