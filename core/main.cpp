@@ -11,6 +11,7 @@
 #include <condition_variable>
 
 #ifdef _WIN32
+#include <winsock2.h>
 #include <windows.h>
 #endif
 
@@ -23,6 +24,37 @@
 namespace fs = std::filesystem;
 
 static std::atomic<bool> g_running{true};
+
+// ─── Jarvis IPC — отправка текста в robot_server по UDP ──────────────
+static constexpr uint16_t IPC_PORT = 9712;
+
+static void sendIpc(const std::string& text) {
+#ifdef _WIN32
+    static bool wsaInited = false;
+    if (!wsaInited) {
+        WSADATA wsa{};
+        WSAStartup(MAKEWORD(2, 2), &wsa);
+        wsaInited = true;
+    }
+    SOCKET sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if (sock == INVALID_SOCKET) return;
+
+    sockaddr_in addr{};
+    addr.sin_family      = AF_INET;
+    addr.sin_port        = htons(IPC_PORT);
+    addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+
+    // Экранируем кавычки в тексте
+    std::string safe = text;
+    for (size_t i = 0; i < safe.size(); ++i) {
+        if (safe[i] == '"') { safe.insert(i, "\\"); i++; }
+    }
+    std::string json = "{\"type\":\"stt\",\"text\":\"" + safe + "\"}";
+    sendto(sock, json.c_str(), (int)json.size(), 0,
+           reinterpret_cast<sockaddr*>(&addr), sizeof(addr));
+    closesocket(sock);
+#endif
+}
 
 static void signalHandler(int) {
     std::cout << "\n[Jarvis] Завершение...\n";
@@ -90,10 +122,12 @@ try
 
                 std::string text = stt.transcribe(audio);
 
-                if (!text.empty())
+                if (!text.empty()) {
                     std::cout << "[STT] >>> " << text << "\n\n";
-                else
+                    sendIpc(text);   // → robot_server UDP 9712
+                } else {
                     std::cout << "[STT] (пусто)\n\n";
+                }
                 std::cout.flush();
             }
         } catch (const std::exception& e) {

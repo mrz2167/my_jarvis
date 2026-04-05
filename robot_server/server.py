@@ -24,6 +24,7 @@ import commands
 from stt import StreamingSTT
 from robot_control import RobotControl
 from mic import LocalMic
+from ipc import start_ipc_server
 
 logging.basicConfig(
     level=logging.INFO,
@@ -138,8 +139,12 @@ def video_loop():
 async def main():
     log.info(f"Jarvis Robot Server запущен на ws://{config.HOST}:{config.PORT}")
     log.info(f"Vosk модель: {config.VOSK_MODEL_PATH}")
+    log.info(f"Jarvis IPC: UDP 127.0.0.1:{config.IPC_PORT}")
     log.info("Ожидаю подключения робота...")
-    log.info("Команды: вперёд / назад / влево / вправо / стоп / возьми / отпусти / домой")
+    log.info("Команды: вперёд / назад / влево / вправо / стоп / возьми / отпусти / домой / подними / опусти / вытяни")
+
+    # UDP слушатель для текста от Jarvis C++ core
+    await start_ipc_server(on_text_recognized)
 
     async with websockets.serve(handler, config.HOST, config.PORT,
                                 ping_interval=None,

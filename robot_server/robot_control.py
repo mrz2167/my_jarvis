@@ -61,6 +61,21 @@ class RobotControl:
                           "servos": config.ARM_HOME,
                           "time_ms": config.MOVE_TIME_MS})
 
+    async def arm_up(self):
+        await self._send({"type": "cmd_servos",
+                          "servos": config.ARM_UP,
+                          "time_ms": config.MOVE_TIME_MS})
+
+    async def arm_down(self):
+        await self._send({"type": "cmd_servos",
+                          "servos": config.ARM_DOWN,
+                          "time_ms": config.MOVE_TIME_MS})
+
+    async def arm_extend(self):
+        await self._send({"type": "cmd_servos",
+                          "servos": config.ARM_EXTEND,
+                          "time_ms": config.MOVE_TIME_MS})
+
     async def grab(self):
         await self._send({"type": "cmd_servos",
                           "servos": config.ARM_GRAB,
@@ -104,6 +119,12 @@ class RobotControl:
             await self.release()
         elif command == "arm_home":
             await self.arm_home()
+        elif command == "arm_up":
+            await self.arm_up()
+        elif command == "arm_down":
+            await self.arm_down()
+        elif command == "arm_extend":
+            await self.arm_extend()
         elif command == "status_battery":
             log.info(f"Батарея: {self.battery_v:.2f}V")
             if telemetry_callback:
